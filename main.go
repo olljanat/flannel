@@ -716,7 +716,7 @@ func LookupExtIface(ifname string, ifregexS string, ipStack int) (*backend.Exter
 		log.Infof("Using %s as external address", extAddr)
 	}
 
-	if extAddr == nil {
+	if extAddr == nil && ipStack != ipv6Stack {
 		log.Infof("Defaulting external address to interface address (%s)", ifaceAddr)
 		extAddr = ifaceAddr
 	}

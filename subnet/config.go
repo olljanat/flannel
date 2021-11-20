@@ -54,8 +54,6 @@ func parseBackendType(be json.RawMessage) (string, error) {
 
 func ParseConfig(s string) (*Config, error) {
 	cfg := new(Config)
-	// Enable ipv4 by default
-	cfg.EnableIPv4 = true
 	err := json.Unmarshal([]byte(s), cfg)
 	if err != nil {
 		return nil, err
