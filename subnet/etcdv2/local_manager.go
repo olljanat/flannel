@@ -34,7 +34,7 @@ const (
 
 type LocalManager struct {
 	registry       Registry
-	previousSubnet ip.IP4Net
+	previousSubnet ip.IPNet
 }
 
 type watchCursor struct {
@@ -69,7 +69,7 @@ func (c watchCursor) String() string {
 	return strconv.FormatUint(c.index, 10)
 }
 
-func NewLocalManager(config *EtcdConfig, prevSubnet ip.IP4Net) (Manager, error) {
+func NewLocalManager(config *EtcdConfig, prevSubnet ip.IPNet) (Manager, error) {
 	r, err := newEtcdSubnetRegistry(config, nil)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func NewLocalManager(config *EtcdConfig, prevSubnet ip.IP4Net) (Manager, error) 
 	return newLocalManager(r, prevSubnet), nil
 }
 
-func newLocalManager(r Registry, prevSubnet ip.IP4Net) Manager {
+func newLocalManager(r Registry, prevSubnet ip.IPNet) Manager {
 	return &LocalManager{
 		registry:       r,
 		previousSubnet: prevSubnet,
@@ -117,7 +117,7 @@ func (m *LocalManager) AcquireLease(ctx context.Context, attrs *LeaseAttrs) (*Le
 	return nil, errors.New("Max retries reached trying to acquire a subnet")
 }
 
-func findLeaseByIP(leases []Lease, pubIP ip.IP4) *Lease {
+func findLeaseByIP(leases []Lease, pubIP ip.IP) *Lease {
 	for _, l := range leases {
 		if pubIP == l.Attrs.PublicIP {
 			return &l
@@ -127,7 +127,7 @@ func findLeaseByIP(leases []Lease, pubIP ip.IP4) *Lease {
 	return nil
 }
 
-func findLeaseBySubnet(leases []Lease, subnet ip.IP4Net) *Lease {
+func findLeaseBySubnet(leases []Lease, subnet ip.IPNet) *Lease {
 	for _, l := range leases {
 		if subnet.Equal(l.Subnet) {
 			return &l
@@ -137,7 +137,7 @@ func findLeaseBySubnet(leases []Lease, subnet ip.IP4Net) *Lease {
 	return nil
 }
 
-func (m *LocalManager) tryAcquireLease(ctx context.Context, config *Config, extIaddr ip.IP4, attrs *LeaseAttrs) (*Lease, error) {
+func (m *LocalManager) tryAcquireLease(ctx context.Context, config *Config, extIaddr ip.IP, attrs *LeaseAttrs) (*Lease, error) {
 	leases, _, err := m.registry.getSubnets(ctx)
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (m *LocalManager) tryAcquireLease(ctx context.Context, config *Config, extI
 	}
 
 	// no existing match, check if there was a previous subnet to use
-	var sn ip.IP4Net
+	var sn ip.IPNet
 	if !m.previousSubnet.Empty() {
 		// use previous subnet
 		if l := findLeaseBySubnet(leases, m.previousSubnet); l != nil {
@@ -233,11 +233,11 @@ func (m *LocalManager) tryAcquireLease(ctx context.Context, config *Config, extI
 	}
 }
 
-func (m *LocalManager) allocateSubnet(config *Config, leases []Lease) (ip.IP4Net, error) {
+func (m *LocalManager) allocateSubnet(config *Config, leases []Lease) (ip.IPNet, error) {
 	log.Infof("Picking subnet in range %s ... %s", config.SubnetMin, config.SubnetMax)
 
-	var bag []ip.IP4
-	sn := ip.IP4Net{IP: config.SubnetMin, PrefixLen: config.SubnetLen}
+	var bag []ip.IP
+	sn := ip.IPNet{IP: config.SubnetMin, PrefixLen: config.SubnetLen}
 
 OuterLoop:
 	for ; sn.IP <= config.SubnetMax && len(bag) < 100; sn = sn.Next() {
@@ -250,10 +250,10 @@ OuterLoop:
 	}
 
 	if len(bag) == 0 {
-		return ip.IP4Net{}, errors.New("out of subnets")
+		return ip.IPNet{}, errors.New("out of subnets")
 	} else {
 		i := randInt(0, len(bag))
-		return ip.IP4Net{IP: bag[i], PrefixLen: config.SubnetLen}, nil
+		return ip.IPNet{IP: bag[i], PrefixLen: config.SubnetLen}, nil
 	}
 }
 
@@ -285,7 +285,7 @@ func getNextIndex(cursor interface{}) (uint64, error) {
 	return nextIndex, nil
 }
 
-func (m *LocalManager) leaseWatchReset(ctx context.Context, sn ip.IP4Net) (LeaseWatchResult, error) {
+func (m *LocalManager) leaseWatchReset(ctx context.Context, sn ip.IPNet) (LeaseWatchResult, error) {
 	l, index, err := m.registry.getSubnet(ctx, sn)
 	if err != nil {
 		return LeaseWatchResult{}, err
@@ -301,7 +301,7 @@ func (m *LocalManager) leaseWatchReset(ctx context.Context, sn ip.IP4Net) (Lease
 	}, nil
 }
 
-func (m *LocalManager) WatchLease(ctx context.Context, sn ip.IP4Net, cursor interface{}) (LeaseWatchResult, error) {
+func (m *LocalManager) WatchLease(ctx context.Context, sn ip.IPNet, cursor interface{}) (LeaseWatchResult, error) {
 	if cursor == nil {
 		return m.leaseWatchReset(ctx, sn)
 	}
@@ -384,7 +384,7 @@ func (m *LocalManager) leasesWatchReset(ctx context.Context) (LeaseWatchResult, 
 	return wr, nil
 }
 
-func isSubnetConfigCompat(config *Config, sn ip.IP4Net) bool {
+func isSubnetConfigCompat(config *Config, sn ip.IPNet) bool {
 	if sn.IP < config.SubnetMin || sn.IP > config.SubnetMax {
 		return false
 	}

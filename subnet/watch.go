@@ -234,7 +234,7 @@ func deleteLease(l []Lease, i int) []Lease {
 // and communicates addition/deletion events on receiver channel. It takes care
 // of handling "fall-behind" logic where the history window has advanced too far
 // and it needs to diff the latest snapshot with its saved state and generate events
-func WatchLease(ctx context.Context, sm Manager, sn ip.IP4Net, receiver chan Event) {
+func WatchLease(ctx context.Context, sm Manager, sn ip.IPNet, receiver chan Event) {
 	var cursor interface{}
 
 	for {

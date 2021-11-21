@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math/big"
 	"net"
+	"strings"
 )
 
 type IP6 big.Int
@@ -92,6 +93,11 @@ func (ip6 *IP6) ToIP() net.IP {
 
 func (ip6 IP6) String() string {
 	return ip6.ToIP().String()
+}
+
+func (ip IP6) StringSep(sep string) string {
+	a := strings.Split(ip.String(), ":")
+	return fmt.Sprintf("%d%s%d%s%d%s%d%s%d%s%d%s%d", a[0], sep, a[1], sep, a[2], sep, a[3], sep, a[4], sep, a[5], sep, a[6], sep, a[7])
 }
 
 // MarshalJSON: json.Marshaler impl
