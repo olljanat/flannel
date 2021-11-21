@@ -44,7 +44,7 @@ type LeaseAttrs struct {
 type Lease struct {
 	EnableIPv4 bool
 	EnableIPv6 bool
-	Subnet     ip.IPNet
+	Subnet     ip.IP4Net
 	IPv6Subnet ip.IP6Net
 	Attrs      LeaseAttrs
 	Expiration time.Time
@@ -53,7 +53,11 @@ type Lease struct {
 }
 
 func (l *Lease) Key() string {
-	return MakeSubnetKey(l.Subnet)
+	subnet := ip.IPNet{
+		IP4Net: l.Subnet,
+		IP6Net: l.IPv6Subnet,
+	}
+	return MakeSubnetKey(subnet)
 }
 
 type (

@@ -99,8 +99,12 @@ func (m *LocalManager) AcquireLease(ctx context.Context, attrs *LeaseAttrs) (*Le
 		return nil, err
 	}
 
+	publicIP := ip.IP{
+		IP4: attrs.PublicIP,
+		IP6: *attrs.PublicIPv6,
+	}
 	for i := 0; i < raceRetries; i++ {
-		l, err := m.tryAcquireLease(ctx, config, attrs.PublicIP, attrs)
+		l, err := m.tryAcquireLease(ctx, config, publicIP, attrs)
 		switch err {
 		case nil:
 			//TODO only vxlan backend and kube subnet manager support dual stack now.
@@ -119,8 +123,14 @@ func (m *LocalManager) AcquireLease(ctx context.Context, attrs *LeaseAttrs) (*Le
 
 func findLeaseByIP(leases []Lease, pubIP ip.IP) *Lease {
 	for _, l := range leases {
-		if pubIP == l.Attrs.PublicIP {
-			return &l
+		if pubIP.IP6.String() != "" && pubIP.IP4.String() == "" {
+			if &pubIP.IP6 == l.Attrs.PublicIPv6 {
+				return &l
+			}	
+		} else {
+			if pubIP.IP4 == l.Attrs.PublicIP {
+				return &l
+			}
 		}
 	}
 
@@ -129,8 +139,14 @@ func findLeaseByIP(leases []Lease, pubIP ip.IP) *Lease {
 
 func findLeaseBySubnet(leases []Lease, subnet ip.IPNet) *Lease {
 	for _, l := range leases {
-		if subnet.Equal(l.Subnet) {
-			return &l
+		if subnet.IP6Net.String() != "" && subnet.IP4Net.String() == "" {
+			if subnet.IP6Net.Equal(l.IPv6Subnet) {
+				return &l
+			}
+		} else {
+			if subnet.IP4Net.Equal(l.Subnet) {
+				return &l
+			}
 		}
 	}
 
