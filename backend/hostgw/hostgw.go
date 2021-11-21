@@ -68,7 +68,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup
 		attrs.PublicIP = ip.FromIP(be.extIface.ExtAddr)
 		n.GetRoute = func(lease *subnet.Lease) *netlink.Route {
 			return &netlink.Route{
-				Dst:       lease.Subnet.ToIPNet(),
+				Dst:       lease.Subnet.IP4Net.ToIPNet(),
 				Gw:        lease.Attrs.PublicIP.ToIP(),
 				LinkIndex: n.LinkIndex,
 			}
@@ -79,7 +79,7 @@ func (be *HostgwBackend) RegisterNetwork(ctx context.Context, wg *sync.WaitGroup
 		attrs.PublicIPv6 = ip.FromIP6(be.extIface.ExtV6Addr)
 		n.GetV6Route = func(lease *subnet.Lease) *netlink.Route {
 			return &netlink.Route{
-				Dst:       lease.IPv6Subnet.ToIPNet(),
+				Dst:       lease.Subnet.IP6Net.ToIPNet(),
 				Gw:        lease.Attrs.PublicIPv6.ToIP(),
 				LinkIndex: n.LinkIndex,
 			}

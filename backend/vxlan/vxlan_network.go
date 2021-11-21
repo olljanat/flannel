@@ -91,8 +91,8 @@ type vxlanLeaseAttrs struct {
 
 func (nw *network) handleSubnetEvents(batch []subnet.Event) {
 	for _, event := range batch {
-		sn := event.Lease.Subnet
-		v6Sn := event.Lease.IPv6Subnet
+		sn := event.Lease.Subnet.IP4Net
+		v6Sn := event.Lease.Subnet.IP6Net
 		attrs := event.Lease.Attrs
 		if attrs.BackendType != "vxlan" {
 			log.Warningf("ignoring non-vxlan v4Subnet(%s) v6Subnet(%s): type=%v", sn, v6Sn, attrs.BackendType)
@@ -186,7 +186,7 @@ func (nw *network) handleSubnetEvents(batch []subnet.Event) {
 						log.Error("AddFDB failed: ", err)
 
 						// Try to clean up the ARP entry then continue
-						if err := nw.dev.DelARP(neighbor{IP: event.Lease.Subnet.IP, MAC: net.HardwareAddr(vxlanAttrs.VtepMAC)}); err != nil {
+						if err := nw.dev.DelARP(neighbor{IP: event.Lease.Subnet.IP4Net.IP, MAC: net.HardwareAddr(vxlanAttrs.VtepMAC)}); err != nil {
 							log.Error("DelARP failed: ", err)
 						}
 
@@ -199,7 +199,7 @@ func (nw *network) handleSubnetEvents(batch []subnet.Event) {
 						log.Errorf("failed to add vxlanRoute (%s -> %s): %v", vxlanRoute.Dst, vxlanRoute.Gw, err)
 
 						// Try to clean up both the ARP and FDB entries then continue
-						if err := nw.dev.DelARP(neighbor{IP: event.Lease.Subnet.IP, MAC: net.HardwareAddr(vxlanAttrs.VtepMAC)}); err != nil {
+						if err := nw.dev.DelARP(neighbor{IP: event.Lease.Subnet.IP4Net.IP, MAC: net.HardwareAddr(vxlanAttrs.VtepMAC)}); err != nil {
 							log.Error("DelARP failed: ", err)
 						}
 
@@ -230,7 +230,7 @@ func (nw *network) handleSubnetEvents(batch []subnet.Event) {
 						log.Error("AddV6FDB failed: ", err)
 
 						// Try to clean up the ARP entry then continue
-						if err := nw.v6Dev.DelV6ARP(neighbor{IP6: event.Lease.IPv6Subnet.IP, MAC: net.HardwareAddr(v6VxlanAttrs.VtepMAC)}); err != nil {
+						if err := nw.v6Dev.DelV6ARP(neighbor{IP6: event.Lease.Subnet.IP6Net.IP, MAC: net.HardwareAddr(v6VxlanAttrs.VtepMAC)}); err != nil {
 							log.Error("DelV6ARP failed: ", err)
 						}
 
@@ -243,7 +243,7 @@ func (nw *network) handleSubnetEvents(batch []subnet.Event) {
 						log.Errorf("failed to add v6 vxlanRoute (%s -> %s): %v", v6VxlanRoute.Dst, v6VxlanRoute.Gw, err)
 
 						// Try to clean up both the ARP and FDB entries then continue
-						if err := nw.v6Dev.DelV6ARP(neighbor{IP6: event.Lease.IPv6Subnet.IP, MAC: net.HardwareAddr(v6VxlanAttrs.VtepMAC)}); err != nil {
+						if err := nw.v6Dev.DelV6ARP(neighbor{IP6: event.Lease.Subnet.IP6Net.IP, MAC: net.HardwareAddr(v6VxlanAttrs.VtepMAC)}); err != nil {
 							log.Error("DelV6ARP failed: ", err)
 						}
 

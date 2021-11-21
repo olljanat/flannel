@@ -44,3 +44,10 @@ func (n IPNet) ToIPNet() *net.IPNet {
 	}
 	return n.IP4Net.ToIPNet()
 }
+
+func (n IPNet) Empty() bool {
+	if n.IPv6Only {
+		return n.IP6Net.Empty()
+	}
+	return n.IP4Net.Empty()
+}

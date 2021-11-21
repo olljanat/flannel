@@ -45,7 +45,7 @@ type IPTablesRule struct {
 
 func MasqRules(ipn ip.IP4Net, lease *subnet.Lease) []IPTablesRule {
 	n := ipn.String()
-	sn := lease.Subnet.String()
+	sn := lease.Subnet.IP4Net.String()
 	supports_random_fully := false
 	ipt, err := iptables.New()
 	if err == nil {
@@ -79,7 +79,7 @@ func MasqRules(ipn ip.IP4Net, lease *subnet.Lease) []IPTablesRule {
 
 func MasqIP6Rules(ipn ip.IP6Net, lease *subnet.Lease) []IPTablesRule {
 	n := ipn.String()
-	sn := lease.IPv6Subnet.String()
+	sn := lease.Subnet.IP6Net.String()
 	supports_random_fully := false
 	ipt, err := iptables.NewWithProtocol(iptables.ProtocolIPv6)
 	if err == nil {

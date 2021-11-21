@@ -195,7 +195,7 @@ func (be *IPIPBackend) configureIPIPDevice(lease *subnet.Lease, flannelnet ip.IP
 	// Ensure that the device has a /32 address so that no broadcast routes are created.
 	// This IP is just used as a source address for host to workload traffic (so
 	// the return path for the traffic has an address on the flannel network to use as the destination)
-	if err := ip.EnsureV4AddressOnLink(ip.IP4Net{IP: lease.Subnet.IP, PrefixLen: 32}, flannelnet, link); err != nil {
+	if err := ip.EnsureV4AddressOnLink(ip.IP4Net{IP: lease.Subnet.IP4Net.IP, PrefixLen: 32}, flannelnet, link); err != nil {
 		return nil, fmt.Errorf("failed to ensure address of interface %s: %s", link.Attrs().Name, err)
 	}
 

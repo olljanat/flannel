@@ -90,14 +90,14 @@ func (n *RouteNetwork) handleSubnetEvents(batch []subnet.Event) {
 			}
 
 			if evt.Lease.EnableIPv4 {
-				log.Infof("Subnet added: %v via %v", evt.Lease.Subnet, evt.Lease.Attrs.PublicIP)
+				log.Infof("Subnet added: %v via %v", evt.Lease.Subnet.IP4Net, evt.Lease.Attrs.PublicIP)
 
 				route := n.GetRoute(&evt.Lease)
 				routeAdd(route, netlink.FAMILY_V4, n.addToRouteList, n.removeFromV4RouteList)
 			}
 
 			if evt.Lease.EnableIPv6 {
-				log.Infof("Subnet added: %v via %v", evt.Lease.IPv6Subnet, evt.Lease.Attrs.PublicIPv6)
+				log.Infof("Subnet added: %v via %v", evt.Lease.Subnet.IP6Net, evt.Lease.Attrs.PublicIPv6)
 
 				route := n.GetV6Route(&evt.Lease)
 				routeAdd(route, netlink.FAMILY_V6, n.addToV6RouteList, n.removeFromV6RouteList)
@@ -110,7 +110,7 @@ func (n *RouteNetwork) handleSubnetEvents(batch []subnet.Event) {
 			}
 
 			if evt.Lease.EnableIPv4 {
-				log.Info("Subnet removed: ", evt.Lease.Subnet)
+				log.Info("Subnet removed: ", evt.Lease.Subnet.IP4Net)
 
 				route := n.GetRoute(&evt.Lease)
 				// Always remove the route from the route list.
@@ -122,14 +122,14 @@ func (n *RouteNetwork) handleSubnetEvents(batch []subnet.Event) {
 			}
 
 			if evt.Lease.EnableIPv6 {
-				log.Info("Subnet removed: ", evt.Lease.IPv6Subnet)
+				log.Info("Subnet removed: ", evt.Lease.Subnet.IP6Net)
 
 				route := n.GetV6Route(&evt.Lease)
 				// Always remove the route from the route list.
 				n.removeFromV6RouteList(*route)
 
 				if err := netlink.RouteDel(route); err != nil {
-					log.Errorf("Error deleting route to %v: %v", evt.Lease.IPv6Subnet, err)
+					log.Errorf("Error deleting route to %v: %v", evt.Lease.Subnet.IP6Net, err)
 				}
 			}
 

@@ -140,11 +140,11 @@ func findLeaseByIP(leases []Lease, pubIP ip.IP) *Lease {
 func findLeaseBySubnet(leases []Lease, subnet ip.IPNet) *Lease {
 	for _, l := range leases {
 		if subnet.IP6Net.String() != "" && subnet.IP4Net.String() == "" {
-			if subnet.IP6Net.Equal(l.IPv6Subnet) {
+			if subnet.IP6Net.Equal(l.Subnet.IP6Net) {
 				return &l
 			}
 		} else {
-			if subnet.IP4Net.Equal(l.Subnet) {
+			if subnet.IP4Net.Equal(l.Subnet.IP4Net) {
 				return &l
 			}
 		}
@@ -401,7 +401,11 @@ func (m *LocalManager) leasesWatchReset(ctx context.Context) (LeaseWatchResult, 
 }
 
 func isSubnetConfigCompat(config *Config, sn ip.IPNet) bool {
-	if sn.IP < config.SubnetMin || sn.IP > config.SubnetMax {
+	// FixMe: Maybe we should do this with IPv6 too?
+	if sn.IP6Net.String() != "" &&  sn.IP4Net.String() == "" {
+		return false
+	}
+	if sn.IP4Net.IP < config.SubnetMin || sn.IP4Net.IP > config.SubnetMax {
 		return false
 	}
 
